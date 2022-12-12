@@ -1,0 +1,647 @@
+DROP TABLE CLIENT CASCADE CONSTRAINTS;
+DROP TABLE PRODUS CASCADE CONSTRAINTS;
+DROP TABLE DETALII_COMANDA CASCADE CONSTRAINTS;
+DROP TABLE CURIER CASCADE CONSTRAINTS;
+
+CREATE TABLE CLIENT 
+(
+ID varchar(10),
+Nume varchar(15),
+Prenume varchar(15),
+Email varchar(50),
+NR_TELEFON varchar(50)
+);
+
+ALTER TABLE CLIENT MODIFY ID NOT NULL;
+ALTER TABLE CLIENT ADD CONSTRAINT pk_client PRIMARY KEY(ID);
+
+CREATE TABLE PRODUS
+(
+ID_Produs varchar(10) PRIMARY KEY NOT NULL,
+Nume_Produs varchar(30),
+Pret_Produs number(10),
+Stoc integer
+);
+
+CREATE TABLE DETALII_COMANDA
+(
+ID_Comanda varchar(10) PRIMARY KEY NOT NULL,
+NR_Comanda integer,
+Adresa varchar(60),
+NR_Produse integer,
+Data_Inregistrarii_Comenzii date,
+Client_Asignat varchar(10),
+Produs_Asignat varchar(10), 
+CONSTRAINT FK_Client FOREIGN KEY(Client_Asignat) REFERENCES CLIENT(ID)
+);
+ALTER TABLE DETALII_COMANDA ADD CONSTRAINT FK_Produs FOREIGN KEY(Produs_Asignat) REFERENCES PRODUS(ID_Produs);
+
+CREATE TABLE CURIER
+(
+Nume varchar(10),
+Prenume varchar(10),
+ID_CURIER varchar(10) PRIMARY KEY NOT NULL,
+NR_TELEFON_CURIER varchar(20),
+ID_Client varchar(10),
+ID_Comanda_Asignata varchar(10),
+CONSTRAINT FK_Client_Asignat FOREIGN KEY(ID_Client) REFERENCES CLIENT(ID),
+CONSTRAINT FK_Comanda_Asignata FOREIGN KEY(ID_Comanda_Asignata) REFERENCES DETALII_COMANDA(ID_Comanda)
+);
+
+INSERT INTO CLIENT VALUES('1','Miron','Bogdan-Gabriel','mironbogdan20@stud.ase.ro','0768922994');
+INSERT INTO CLIENT VALUES('2','Nistor','Constantin','nistorconstantin@gmail.com','0768922992');
+INSERT INTO CLIENT VALUES('3','Neagu','Alexa','neagualexa@gmail.com','0768922494');
+INSERT INTO CLIENT VALUES('4','Neagu','Alex','alexneagu@yahoo.com','0768922980');
+INSERT INTO CLIENT VALUES('5','Vlad','Costin','vladcostin20@yahoo.com','0768722980');
+INSERT INTO CLIENT VALUES('6','Moraru','Paul','paulmoraru222@gmail.com','0768222980');
+INSERT INTO CLIENT VALUES('7','Denis','Ion','IonDenis@yahoo.com','0768927980');
+INSERT INTO CLIENT VALUES('8','Tofan','Cosmin','tofanvlad21@stud.ase.ro','0764922980');
+
+
+
+INSERT INTO PRODUS VALUES('23','Lantisor cu diamante',200 ,50);
+INSERT INTO PRODUS VALUES('64','inel de aur',50 ,100);
+INSERT INTO PRODUS VALUES('35','cercei de argint',10,150);
+INSERT INTO PRODUS VALUES('57','bratara de argint',10 ,120);
+INSERT INTO PRODUS VALUES('27','bratara de aur',100,30);
+INSERT INTO PRODUS VALUES('17','cercei de aur',60,50);
+
+
+INSERT INTO DETALII_COMANDA VALUES('9',21,'Pajurei numarul 6, Bucuresti sector 1 bloc 3 ',1,to_date('09-01-2022','dd-mm-yyyy'),'1','23');
+INSERT INTO DETALII_COMANDA VALUES('10',25,'Victoriei numarul 2, Bucuresti sector 1 bloc 2 ',2,to_date('11-01-2022','dd-mm-yyyy'),'2','64');
+INSERT INTO DETALII_COMANDA VALUES('11',35,'Romana 6 numarul 4, Bucuresti sector 4 bloc 5 ',2,to_date('10-01-2022','dd-mm-yyyy'),'3','35');
+INSERT INTO DETALII_COMANDA VALUES('12',49,'Unirii numarul 5 Bucuresti sector 3 bloc 4 ',1,to_date('12-01-2022','dd-mm-yyyy'),'4','57');
+INSERT INTO DETALII_COMANDA VALUES('13',21,'Pajurei numarul 3, Bucuresti sector 1 bloc 4 ',1,to_date('10-01-2022','dd-mm-yyyy'),'5','57');
+INSERT INTO DETALII_COMANDA VALUES('14',25,'Victoriei numarul 1, Bucuresti sector 1 bloc 1 ',2,to_date('11-01-2022','dd-mm-yyyy'),'6','23');
+INSERT INTO DETALII_COMANDA VALUES('15',35,'Romana  numarul 5, Bucuresti sector 4 bloc 3 ',2,to_date('10-01-2022','dd-mm-yyyy'),'7','64');
+INSERT INTO DETALII_COMANDA VALUES('16',49,'Unirii numarul 6 Bucuresti sector 3 bloc 2 ',1,to_date('12-01-2022','dd-mm-yyyy'),'8','64');
+
+
+
+INSERT INTO CURIER VALUES ('Misaila','Horia','17','0768922445','1','9');
+INSERT INTO CURIER VALUES ('Neagu','Alex','18','0768922442','2','10');
+INSERT INTO CURIER VALUES ('Vlad','Costin','19','0768422445','3','11');
+INSERT INTO CURIER VALUES ('Moraru','Ioan','20','0766922145','4','12');
+INSERT INTO CURIER VALUES ('Costin','Mihai','21','0768922445','5','16');
+INSERT INTO CURIER VALUES ('Ivan','Rares','22','0768922542','6','15');
+INSERT INTO CURIER VALUES ('Alex','Oprea','23','0768422945','7','14');
+INSERT INTO CURIER VALUES ('Moraru','Alex','24','0766922443','8','13');
+INSERT INTO CURIER VALUES ('Craciun','Denis','25','0736922445',NULL,NULL);
+
+prompt sa se creeze o tabela ProduseBijuteriiStoc care sa contina bijuteriile care au stocul mai mare de 100 
+prompt intr-un limbaj PL/SQL
+
+SET SERVEROUTPUT ON
+begin 
+execute immediate 'DROP table ProduseBijuteriiStoc';
+execute immediate 'CREATE table ProduseBijuteriiStoc AS SELECT * FROM PRODUS WHERE stoc>100';
+end;
+
+prompt sa se adauge o noua coloana  TipBij în tabela Produse si sa se stearga imediat dupa adaugare
+SET SERVEROUTPUT ON
+DECLARE
+V_SIR VARCHAR2(200);
+BEGIN
+V_SIR:='ALTER TABLE PRODUS ADD(TipBij varchar2(100))';
+EXECUTE IMMEDIATE V_SIR;
+EXECUTE IMMEDIATE 'ALTER TABLE PRODUS DROP (TipBij)';
+END;
+select* from PRODUS;
+
+prompt sa se ofere un discount de 10% din pretul bunului cu id-ul 17 iar in cazul in care
+prompt nu exista produsul cu id-ul 17, sa se afiseze pe ecran un mesaj de atentionare
+
+SET SERVEROUTPUT ON
+BEGIN
+UPDATE PRODUS 
+SET pret_produs=pret_produs-10/100*pret_produs
+WHERE id_produs=105;
+EXCEPTION 
+WHEN NO_DATA_FOUND THEN
+dbms_output.put_line('Nu exista produsul cu acest ID');
+END;
+
+prompt sa se mareasca valoarea pretului produsului cu id-ul citit de la tastatura
+prompt si sa se afiseze pretul inainte si dupa modificare 
+
+SET SERVEROUTPUT ON
+DECLARE
+p_nou produs.pret_produs%type;
+BEGIN
+SELECT pret_produs into p_nou from produs where id_produs=&p;
+dbms_output.put_line ('Pretul de lista initial este: '||p_nou);
+IF p_nou < 100 THEN
+p_nou:=2* p_nou;
+ELSIF p_nou between 20 and 50 THEN
+p_nou:=1.5 * p_nou;
+ELSE
+p_nou:=1.25* p_nou;
+END IF;
+dbms_output.put_line('Pretul final este: '||p_nou);
+end;
+
+
+prompt pentru comanda cu id-ul citit de la tastatura sa se afiseze cate un mesaj specific in cazul in care comanda are unul sau are mai mult de 1 produs
+
+SET SERVEROUTPUT ON 
+declare
+n_prod detalii_comanda.nr_produse%type;
+BEGIN 
+select nr_produse into n_prod from detalii_comanda where id_comanda=&c;
+CASE
+WHEN n_prod> 1 THEN
+dbms_output.put_line ('Atentie, comanda are mai mult de un produs:'||n_prod);
+ELSE
+dbms_output.put_line ('Comanda are un singur produs:'|| n_prod);
+END CASE;
+end;
+
+
+
+prompt sa se afiseze numarul de telefon al curierului cu prenumele Alex. Sa se trateze eroare aparuta în cazul în care exista mai multi angajati cu acelasi nume 
+
+SET SERVEROUTPUT ON
+DECLARE
+n_tel curier.nr_telefon_curier%type;
+BEGIN
+select nr_telefon_curier into n_tel from curier where prenume='Alex';
+DBMS_OUTPUT.PUT_LINE('Alex are numarul de telefon: '||n_tel);
+EXCEPTION
+WHEN TOO_MANY_ROWS THEN
+DBMS_OUTPUT.PUT_LINE('Exista mai multi curieri cu numele Alex! Utilizati un
+cursor pentru selectie!');
+END;
+
+prompt sa se afiseze numele si prenumele clientul cu id-ul 5. Sa se trateze eroarea aparuta în cazul în care nu exista niciun client cu acest id.
+
+SET SERVEROUTPUT ON
+DECLARE
+c_nume VARCHAR2(20);
+p_prenume varchar2(20);
+BEGIN
+SELECT nume,prenume INTO c_nume, p_prenume 
+FROM CLIENT
+WHERE id=5;
+dbms_output.put_line(c_nume);
+dbms_output.put_line(p_prenume);
+EXCEPTION
+WHEN NO_DATA_FOUND THEN
+dbms_output.put_line('Nu exista angajatul cu acest ID!');
+END;
+
+
+prompt sa se modifice numele clientului cu id-ul 5. Daca nu se produce nicio actualizare sau daca apare o alta exceptie atunci sa se declanseze o exceptie prin care sa fie avertizat utilizatorul
+DECLARE 
+invalid_prod EXCEPTION;
+BEGIN
+UPDATE CLIENT
+SET nume='Stan'
+WHERE id = 5;
+IF SQL%NOTFOUND THEN
+RAISE invalid_prod;
+END IF;
+EXCEPTION
+WHEN invalid_prod THEN
+DBMS_OUTPUT.PUT_LINE('Nu exista clientul cu acest ID');
+WHEN OTHERS THEN
+DBMS_OUTPUT.PUT_LINE('A aparut o eroare! Nu se poate actualiza numele clientului!');
+END;
+
+prompt sa se arunce o exceptie in care utilizatorul incearca sa proceseze o comanda intre orele 2.00 si 3.00 dimineata
+
+SET SERVEROUTPUT ON
+DECLARE
+e_exc1 EXCEPTION;
+BEGIN
+IF (TO_NUMBER(TO_CHAR(SYSDATE, 'HH24')) >=2 AND TO_NUMBER(TO_CHAR(SYSDATE, 'HH24')) <=3)THEN
+RAISE e_exc1;
+END IF;
+EXCEPTION
+WHEN e_exc1 THEN
+dbms_output.put_line('Este ora '||TO_CHAR(SYSDATE, 'HH24'));
+dbms_output.put_line('Atentie, site-ul este in mentenanta, nu se poate efectua comanda');
+END;
+
+prompt Sa se stearga din tabela curier, curierul cu id-ul 17 si sa se afiseze numarul de randuri sterse
+set serveroutput on
+declare
+nr_randuri number;
+begin 
+delete from curier where id_curier = 17 ;
+nr_randuri := SQL%ROWCOUNT;
+dbms_output.put_line(nr_randuri || ' au fost sterse.');
+commit;
+end;
+
+prompt sa se modifice pretului produsului cu id-ul 23. Daca nu exista, sa se afiseze un mesaj
+
+set serveroutput on
+begin 
+update produs set pret_produs=250 where id_produs=23;
+if SQL%NOTFOUND then
+        dbms_output.put_line('Produsul cu id-ul 23 nu exista!');
+    end if;    
+end;
+
+prompt sa se modifice numarul de telefon al clientului cu id-ul 2. Daca exista, sa se afiseze un mesaj
+
+set serveroutput on
+begin
+update client set nr_telefon='0768955933' where id=2;
+if SQL%FOUND THEN
+    dbms_output.put_line('S-a produs modificarea!');
+    end if;
+end;
+
+prompt sa se afiseze pretul produselor si sa aplice un impozit de 9% daca pretul este mai mare de 100
+set serveroutput on
+declare 
+cursor p is select id_produs, nume_produs, pret_produs from produs;
+r p%rowtype;
+begin
+open p;
+loop
+fetch p into r;
+dbms_output.put_line('Id-ul produsului este '|| r.id_produs || ' cu numele: ' || r.nume_produs||'si pretul'||r.pret_produs);
+        if(r.pret_produs > 100) then
+            r.pret_produs := r.pret_produs+9/100*r.pret_produs;
+        else 
+             r.pret_produs := r.pret_produs;
+        end if;
+        dbms_output.put_line('Produsul impozitat are id-ul '|| r.id_produs || ' cu numele: ' || r.nume_produs||'si pretul'||r.pret_produs);
+        exit when p%notfound;
+    end loop;
+    close p;
+end;
+
+prompt sa se afiseze primele 3 cele mai scumpe produse
+declare
+    cursor c is select * from produs where pret_produs is not null order by pret_produs desc;
+    produs c%rowtype;
+begin
+    dbms_output.put_line('Cele mai scumpe produse sunt: ');
+    open c;
+    loop
+        fetch c into produs;
+        exit when C%notfound or c%rowcount = 4;
+        dbms_output.put_line('Produsul cu id-ul ' || produs.id_produs  ||'are numele'||produs.nume_produs||' cu pretul: ' || produs.pret_produs);
+    end loop;
+end;
+
+prompt sa se afiseze primele 3 comenzi in ordine crescatoare dupa nr de produse comandate. sa se afiseze o eroare daca utilizatorul incearca sa deschis un cursor deja deschis
+DECLARE 
+cursor c is select id_comanda, nr_comanda, nr_produse from detalii_comanda order by nr_produse desc;
+begin
+open c;
+for r in c loop
+exit when c%rowcount>3;
+dbms_output.put_line(r.id_comanda||' '||r.nr_comanda||' '||r.nr_produse);
+end loop;
+EXCEPTION
+WHEN CURSOR_ALREADY_OPEN then
+ dbms_output.put_line('Cursorul este deja deschis');
+end;
+
+
+
+prompt Afisati nr total de comenzi pentru fiecare produs, si un total final din toate comenzile 
+set serveroutput on
+declare 
+    cursor p is select distinct p.nume_produs, p.id_produs from produs p 
+    join detalii_comanda d on p.id_produs = d.produs_asignat
+    order by id_produs;
+    
+    cursor e(p_id number) is select id_comanda, nr_comanda
+    from detalii_comanda where produs_asignat = p_id;
+    
+    nrComenzi number := 0;
+    total number := 0;
+begin
+    for r1 in p loop
+        dbms_output.put_line(r1.nume_produs || ':');
+        nrComenzi := 0;
+        for r2 in e(r1.id_produs) loop 
+            dbms_output.put_line('      - ' || r2.id_comanda || ' ' || r2.nr_comanda);
+            nrComenzi := nrComenzi + 1;
+        end loop;
+        total := total + nrComenzi;
+        dbms_output.put_line(' Nr Comenzi: ' || nrComenzi);
+        dbms_output.put_line('');
+    end loop;
+    dbms_output.put_line('Total Comenzi: ' || total);
+end;
+
+
+
+
+prompt sa se realizeze o functie care returneaza suma totala a unei comenzi si exceptie cand nu se gaseste comanda respectiva
+create or replace function f_suma_com(p_id_com number)
+return number
+is
+v_suma number;
+begin
+	select sum(pret_produs) into v_suma from produs 
+	where id_produs=p_id_com;
+	return v_suma;
+end;
+declare
+	v_rez number;
+	e exception;
+	pragma exception_init(e, -20009);
+begin
+	v_rez:=&rez;
+	dbms_output.put_line(f_suma_com(v_rez));
+	if f_suma_com(v_rez) is null then
+		raise_application_error(-20009, 'nu exista comanda cu acest id');
+	end if;
+exception
+	when others then
+		null;
+end;
+
+
+prompt sa se afiseze numarul de produse dintr-o comanda mai mari decat o valoare data ca parametru apelul se va face printr-o procedura 
+
+create or replace function f_nr_prod(p_id_com number)
+return number
+is
+v_nr number;
+begin
+	select count(id_produs) into v_nr from produs where id_produs = p_id_com;
+	return v_nr;
+end;
+
+create or replace procedure id_com(p_prag number)
+is 
+    cursor c is select id_comanda from detalii_comanda where
+    f_nr_prod(id_comanda)<p_prag;
+begin
+	for r in c loop
+		dbms_output.put_line('id comanda: '||r.id_comanda);
+	end loop;
+end;
+
+set serveroutput on;
+execute id_com(0);
+
+prompt sa se creeze o functie care returneaza media nr de produse dintr-o comanda 
+
+create or replace function f_avg(p_id_com number)
+return number
+is
+v_avg number;
+begin 
+select avg(nr_produse) into v_avg from detalii_comanda where
+id_comanda=p_id_com;
+return v_avg;
+end;
+
+declare
+v_avg number;
+e exception;
+pragma exception_init(e, -20009);
+begin
+v_avg:=f_avg(&id_com);
+dbms_output.put_line('media este '||v_avg);
+if v_avg is null then
+		raise_application_error(-20009, 'nu exista comanda cu acest id');
+	end if;
+end;
+
+prompt sa se realizeze o procedura care primeste doi parametrii pd_id_produs si procent si majoreaza cu procentul specificat, pretul produsului, sa se stearga procedura dupa executarea si afisarea rezultatului
+
+CREATE OR REPLACE PROCEDURE modifica_pret_procent
+(p_id_produs IN produs.id_produs%type, procent IN number) IS
+v_pret produs.pret_produs%type; 
+BEGIN
+Select pret_produs into v_pret from produs where id_produs=p_id_produs;
+dbms_output.put_line('Produsul are pretul initial de '||v_pret);
+Update produs
+Set pret_produs=pret_produs*(1+procent/100)
+Where id_produs=p_id_produs;
+Select pret_produs into v_pret from produs where id_produs=p_id_produs;
+Dbms_output.put_line('Produsul are acum pretul de '||v_pret);
+END;
+begin
+modifica_pret_procent(17, 10);
+end;
+DROP procedure modifica_pret_procent;
+
+prompt sa se realizeze o procedura care modifica pretul produsului daca acesta este mai mic ca media pretului produselor, se va folosi functia modifica_pret_procent implementata anterior
+
+create or replace procedure modifica_pret(avg_pret IN OUT number)
+is
+cursor c is select nume_produs, id_produs, pret_produs from produs 
+where pret_produs <avg_pret;
+begin
+for r in c loop
+modifica_pret_procent(r.id_produs, 15);
+end loop;
+select avg(pret_produs) into avg_pret from produs;
+end;
+declare
+    v_avg number;
+ begin
+    select avg(pret_produs) into v_avg from produs;
+    dbms_output.put_line('Pretul initial: ' || v_avg);
+    modifica_pret(v_avg);
+    dbms_output.put_line('Pretul final: ' || v_avg);
+ end;
+
+/*sa se creeze un pachet pentru gestiunea produselor ce va contine urmatoarel functii
+- procedura ce va adauga un produs 
+- procedura pentru modificarea unui produs
+- procedura pentru stergere produs
+- functie pentru verficare daca produsului exista */
+
+create or replace PACKAGE actualizare_produse IS
+procedure adauga_produs
+(p_codp produs.id_produs%type,
+p_numnp produs.nume_produs%type,
+p_pret produs.pret_produs%type,
+p_stoc produs.stoc%type);
+
+procedure modifica_produs
+(p_codp produs.id_produs%type,
+p_nump produs.nume_produs%type,
+p_pret produs.pret_produs%type,
+p_stoc produs.stoc%type);
+
+procedure sterge_produs
+(p_codp produs.id_produs%type);
+
+function exista_cod
+(p_codp produs.id_produs%type)
+return boolean;
+
+exceptie exception;
+
+END;
+
+create or replace PACKAGE BODY actualizare_produse IS
+procedure adauga_produs
+(p_codp produs.id_produs%type,
+p_nump produs.nume_produs%type,
+p_pret produs.pret_produs%type,
+p_stoc produs.stoc%type);
+is
+begin
+if exista_cod(p_codp) then
+raise exceptie;
+else
+insert into produs(id_produs,nume_produs,pret_produs,stoc) values (p_codp, p_nump, p_pret, p_stoc);
+end if;
+exception
+when exceptie then 
+dbms_output.put_line('Produs existent!');
+end;
+
+procedure modifica_produs
+(p_codp produs.id_produs%type,
+p_nump produs.nume_produs%type,
+p_pret produs.pret_produs%type,
+p_stoc produs.stoc%type);
+is
+begin
+if exista_cod(p_codp) then
+update produs
+set nume_produs=p_nump, pret_produs=p_pret, stoc=p_stoc
+where id_produs=p_codp;
+else
+raise exceptie;
+end if;
+exception
+when exceptie then 
+dbms_output.put_line('Produsul cu aceast cod nu exista!');
+end;
+
+procedure sterge_produs
+(p_codp produs.id_produs%type)
+is
+begin
+if exista_cod(p_codp) then
+delete from produs
+where id_produs=p_codp;
+dbms_output.put_line('Produsul cu codul '||p_codp||' a fost sters!');
+else
+raise exceptie;
+end if;
+exception
+when exceptie then
+dbms_output.put_line('Produsul cu aceast cod nu exista!');
+end;
+
+function exista_cod
+(p_codp produs.id_produs%type)
+return boolean
+is
+v_unu number;
+begin
+select 1 into v_unu
+from produs
+where id_produs=p_codp;
+return true;
+exception
+when no_data_found then
+return false;
+end;
+END;
+
+execute actualizare_produse.adauga_produs(50,'inel cu cristale', 120, 14);
+select * from produse where id_produs=50;
+
+execute actualizare_produse.modifica_produs(51,20);
+select * from produse where id_produs=51;
+
+begin
+actualizare_produse.sterge_produs(27);
+end;
+
+sa se realizeze un pachet pentru gestionarea clientilor care va contine functiile
+- functie cautare client dupa id -> returneaza numele
+- functie cautare id comanda, dupa numele angajatului 
+
+create or replace package p_management_clienti
+is
+function caut_client (p_id client.nume%type) return client.nume%type;
+function caut_comanda(p_id_com detalii_comanda.id_comanda%type, p_id_client client.id%type) return detalii_comanda.id_comanda%type;
+
+end;
+
+create or replace package body p_management_clienti
+is
+
+function caut_client (p_id client.nume%type)
+return client.nume%type
+is
+v_nume client.nume%type;
+begin
+    select nume into v_nume from client where id_client=p_id_client;
+    return v_nume;
+exception
+when no_data_found then 
+    return null;
+when too_many_rows then
+    v_nume := 'mai multi clienti!';
+    return v_nume;
+end caut_client;
+
+caut_comanda(p_id client.nume%type) 
+return detalii_comanda.id_comanda%type;
+is
+v_id detalii_comanda.id_comanda%type;
+begin
+    select id_comanda into v_id from detalii_comanda where client_asignat=p_id ;
+    return v_id;
+exception
+when no_data_found or too_many_rows then 
+    return null;  
+end caut_client;
+END;
+
+declare
+    v_sal number;
+    v_id varchar2(50);
+    v_nume varchar2(50);
+begin
+    v_nume :=p_management_client.caut_client(1);
+    dbms_output.put_line('numele clientului  cu id 1 este '||v_nume);
+    
+    v_id := p_management_client.caut_client('Nistor');
+    dbms_output.put_line('clientul cu comezile '||v_id);
+
+prompt sa se creeze un triger care sa se declanseze la inserarea unui nou curier si sa ne atentioneze cu privire la acest lucru
+
+set serveroutput oncreate or replace trigger t_adaugare_curier
+after insert on curier
+begin
+    dbms_output.put_line('S-a adaugat o inregistrare in tabela curier!');
+end;
+INSERT INTO CURIER VALUES ('Alexa','Opreanu','90','0768422535','1','14');
+alter table curier disable all triggers;
+alter trigger t_adaugare_curier enable;
+
+prompt sa se creeze un triger care sa declanseze la modificarea pretului unui produs mai mare cu 1000 o eroare
+
+CREATE OR REPLACE TRIGGER restrict_pret_produs
+BEFORE INSERT or UPDATE on produs
+FOR EACH ROW 
+BEGIN
+  	IF :new.pret_produs>1000 then
+  	RAISE_APPLICATION_ERROR (-20202, 'Nu se poate depasi pretul maxim pentru functia data');
+  end if;
+END;
+
+UPDATE produs
+SET pret_produs =12000
+WHERE id_produs=23;
+
+alter table produs disable all triggers;
+
+CREATE TRIGGER t_stergere_curier
+    BEFORE DELETE
+    ON CURIER FOR EACH ROW
+    BEGIN
+    delete from curier where id_curier=24;
+    end;
+    
